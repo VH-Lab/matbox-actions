@@ -231,6 +231,15 @@ If the repository root contains a `codemeta.json`, the release workflow updates 
 
 In the same way, if the repository root contains a `CITATION.cff`, the release workflow sets its `version` and `date-released` and includes it in the release check-in commit, leaving every other line of the file as it was. Repositories without a `CITATION.cff` are unaffected.
 
+By default the check-in commit is pushed to the branch the workflow runs on, which needs a `DEPLOY_KEY` that may push to it if that branch is protected. If your default branch only accepts pull requests, either push the check-ins to a separate branch and open a pull request from it:
+
+```yaml
+    with:
+      checkin_branch: release/v{version}   # {version} is replaced by the version number
+```
+
+or skip the check-in commit with `push_checkins: false`. In both cases no `DEPLOY_KEY` is needed, and the packaged MLTBX still contains the updated files.
+
 ## Contributing
 
 Contributions are welcome! Please see individual action directories for specific documentation and examples.

@@ -17,6 +17,9 @@ This action is used by MatBox workflows responsible for publishing toolbox relea
 > [!NOTE]  
 > This action requires appropriate repository permissions for creating releases, pushing tags, and committing files.
 
+> [!TIP]
+> If the checked-out branch is protected and only accepts pull requests, set `checkin_branch` (for example `release/v{version}`) and open a pull request from that branch afterwards, or set `push_checkins: 'false'`.
+
 ## Example
 ```yaml
 name: Create Release
@@ -77,6 +80,9 @@ This example illustrates how the action can be used to create a complete release
 |-------|-------------|
 | `version_number` | [Required] Version number for the release (without 'v' prefix) |
 | `mltbx_path` | [Required] Path to the packaged MLTBX file to attach to the release |
+| `source_directory` | Directory containing source code (default: `src`) |
+| `push_checkins` | Whether to commit and push the updated Contents.m, codemeta.json and CITATION.cff files (default: `true`). With `false`, the release is tagged on the checked-out commit. |
+| `checkin_branch` | Branch to push the check-in commit to instead of the checked-out branch, e.g. `release/v{version}` (`{version}` is replaced by the version number). Created if it does not exist. Default: empty (push to the checked-out branch). |
 
 ## Outputs
 
@@ -85,7 +91,7 @@ This action does not produce direct outputs, but creates a draft GitHub release 
 ## Release Process
 
 The action follows this process:
-1. **Commit Changes**: Commits any updated Contents.m, codemeta.json and CITATION.cff files with [skip actions] marker
+1. **Commit Changes**: Commits any updated Contents.m, codemeta.json and CITATION.cff files with [skip actions] marker and pushes them to the checked-out branch, or to `checkin_branch` if set (skipped when `push_checkins` is `false`)
 2. **Tag Management**: Deletes existing tags (local and remote) and creates new ones
 3. **Release Creation**: Creates a draft GitHub release with automatic release notes
 4. **Badge Integration**: Includes "tested with" badges linking to `gh-badges` branch
