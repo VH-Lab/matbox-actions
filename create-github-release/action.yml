@@ -17,16 +17,21 @@ inputs:
       Whether to commit and push the updated Contents.m, codemeta.json and
       CITATION.cff files. Set to 'false' when the branch is protected and no
       check-in branch is used; the release is then tagged on the checked-out
-      commit (the packaged MLTBX still contains the updated files).
+      commit, so the version strings in the tagged source are stale (the
+      packaged MLTBX still contains the updated files).
     required: false
     default: 'true'
   checkin_branch:
     description: >-
       Branch to push the check-in commit to instead of the checked-out branch,
-      for example 'release/v{version}' ({version} is replaced by the version
-      number). The branch is created if it does not exist; open a pull request
-      from it to bring the check-ins into a protected default branch. Leave
-      empty to push to the checked-out branch.
+      for example 'release/v{version}'. The action substitutes the release
+      version for the literal text {version}, so release/v{version} becomes
+      release/v1.2.3 when releasing 1.2.3. The branch is created if it does not
+      exist; open a pull request from it to bring the check-ins into a
+      protected default branch. The release tag then points at the check-in
+      commit, which joins the default branch's history only if that pull
+      request is merged with a merge commit. Leave empty to push to the
+      checked-out branch.
     required: false
     default: ''
 
@@ -49,15 +54,19 @@ runs:
         if git diff --cached --quiet; then
           echo "No Contents.m, codemeta.json or CITATION.cff changes to commit"
         else
-          git commit -m "Final check-ins for release v${VERSION_NUMBER} [skip actions]"
           if [ -n "$CHECKIN_BRANCH" ]; then
+            # No [skip actions] here: GitHub would skip the checks of the
+            # pull request opened from this branch, so a protected default
+            # branch that requires status checks could not merge it.
+            git commit -m "Final check-ins for release v${VERSION_NUMBER}"
             branch="${CHECKIN_BRANCH//\{version\}/$VERSION_NUMBER}"
             echo "Pushing check-in commit to branch '$branch'"
             if ! git push origin "HEAD:refs/heads/$branch"; then
-              echo "::error::Could not push the check-in commit to '$branch'. If the branch already exists and has diverged, delete it or use a per-version name such as 'release/v{version}'."
+              echo "::error::Could not push the check-in commit to '$branch'. If '$branch' was left over from an earlier run of this release, delete it and re-run the release."
               exit 1
             fi
           else
+            git commit -m "Final check-ins for release v${VERSION_NUMBER} [skip actions]"
             git fetch
             git push
           fi
