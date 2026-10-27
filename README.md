@@ -247,6 +247,7 @@ jobs:
   release:
     permissions:
       contents: write
+      checks: write
     uses: ehennestad/matbox-actions/.github/workflows/prepare-release-workflow.yml@v1
 ```
 
